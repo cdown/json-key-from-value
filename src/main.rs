@@ -33,6 +33,23 @@ fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mu
         Value::String(s) if s == target => {
             paths.push(current_path.join(""));
         }
+        Value::Bool(b) => {
+            if let Ok(target_bool) = target.parse::<bool>() {
+                if *b == target_bool {
+                    paths.push(current_path.join(""));
+                }
+            }
+        }
+        Value::Number(num) => {
+            if let Ok(target_num) = target.parse::<f64>() {
+                if num.as_f64() == Some(target_num) {
+                    paths.push(current_path.join(""));
+                }
+            }
+        }
+        Value::Null if target == "null" => {
+            paths.push(current_path.join(""));
+        }
         _ => {}
     }
 }
