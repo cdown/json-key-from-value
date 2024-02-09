@@ -2,8 +2,13 @@
 name = "json-key-from-value"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Chris Down <chris@chrisdown.name>"]
+description = "Find the key or index that provides a value in a big blob of JSON."
+repository = "https://github.com/cdown/json-key-from-value"
+readme = "README.md"
+keywords = ["json"]
+categories = ["command-line-utilities"]
+license = "MIT"
 
 [dependencies]
 clap = { version = "4.5.0", features = ["derive"] }
