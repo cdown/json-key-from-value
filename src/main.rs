@@ -30,8 +30,10 @@ fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mu
                 find_paths(v, target, path, paths);
             }
         }
-        Value::String(s) if s == target => {
-            paths.push(current_path.join(""));
+        Value::String(s) => {
+            if s == target {
+                paths.push(current_path.join(""));
+            }
         }
         Value::Bool(b) => {
             if let Ok(target_bool) = target.parse::<bool>() {
@@ -47,10 +49,11 @@ fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mu
                 }
             }
         }
-        Value::Null if target == "null" => {
-            paths.push(current_path.join(""));
+        Value::Null => {
+            if target == "null" {
+                paths.push(current_path.join(""));
+            }
         }
-        _ => {}
     }
 }
 
