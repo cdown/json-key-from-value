@@ -29,13 +29,16 @@ For example, given the following JSON:
 
     % json-key-from-value yes < json
     ["data"][0]["foo"][0]["bar"][0]["name"]
+
     % json-key-from-value 2 < json
     ["data"][0]["foo"][0]["bar"][1]["id"]
     ["data"][0]["foo"][1]["baz"][0]["id"]
     ["data"][1]["qux"][0]["quux"][1][0]
     ["data"][1]["qux"][0]["quux"][1][1]
+
     % json-key-from-value true < json
     ["data"][1]["qux"][0]["quux"][2][0]
+
     % json-key-from-value null < json
     ["data"][0]["foo"][1]["baz"][0]["name"]
 
