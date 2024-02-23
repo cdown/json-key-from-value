@@ -15,6 +15,8 @@ struct Args {
 }
 
 fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mut Vec<String>) {
+    let mut found = false;
+
     match value {
         Value::Object(obj) => {
             for (k, v) in obj {
@@ -32,28 +34,32 @@ fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mu
         }
         Value::String(s) => {
             if s == target {
-                paths.push(current_path.join(""));
+                found = true;
             }
         }
         Value::Bool(b) => {
             if let Ok(target_bool) = target.parse::<bool>() {
                 if *b == target_bool {
-                    paths.push(current_path.join(""));
+                    found = true;
                 }
             }
         }
         Value::Number(num) => {
             if let Ok(target_num) = target.parse::<f64>() {
                 if num.as_f64() == Some(target_num) {
-                    paths.push(current_path.join(""));
+                    found = true;
                 }
             }
         }
         Value::Null => {
             if target == "null" {
-                paths.push(current_path.join(""));
+                found = true;
             }
         }
+    }
+
+    if found {
+        paths.push(current_path.join(""));
     }
 }
 
