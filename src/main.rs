@@ -1,69 +1,50 @@
+use anyhow::{Context, Result};
 use clap::Parser;
 use serde_json::Value;
 use std::fs;
 use std::io::{self, Read};
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version, about)]
 struct Args {
     /// JSON file to search in. Reads from stdin if not provided.
-    #[clap(short, long, value_parser)]
+    #[clap(short, long)]
     json: Option<String>,
 
-    /// The value to find
+    /// The value to find.
     value: String,
 }
 
-fn find_paths(value: &Value, target: &str, current_path: Vec<String>, paths: &mut Vec<String>) {
-    let mut found = false;
+fn find_paths(
+    value: &Value,
+    target: &Value,
+    current_path: &mut Vec<String>,
+    paths: &mut Vec<String>,
+) {
+    if value == target {
+        paths.push(current_path.join(""));
+    }
 
     match value {
-        Value::Object(obj) => {
-            for (k, v) in obj {
-                let mut path = current_path.clone();
-                path.push(format!("[\"{k}\"]"));
-                find_paths(v, target, path, paths);
+        Value::Object(map) => {
+            for (k, v) in map {
+                current_path.push(format!("[\"{k}\"]"));
+                find_paths(v, target, current_path, paths);
+                current_path.pop();
             }
         }
         Value::Array(arr) => {
-            for (index, v) in arr.iter().enumerate() {
-                let mut path = current_path.clone();
-                path.push(format!("[{index}]"));
-                find_paths(v, target, path, paths);
+            for (i, v) in arr.iter().enumerate() {
+                current_path.push(format!("[{i}]"));
+                find_paths(v, target, current_path, paths);
+                current_path.pop();
             }
         }
-        Value::String(s) => {
-            if s == target {
-                found = true;
-            }
-        }
-        Value::Bool(b) => {
-            if let Ok(target_bool) = target.parse::<bool>() {
-                if *b == target_bool {
-                    found = true;
-                }
-            }
-        }
-        Value::Number(num) => {
-            if let Ok(target_num) = target.parse::<f64>() {
-                if num.as_f64() == Some(target_num) {
-                    found = true;
-                }
-            }
-        }
-        Value::Null => {
-            if target == "null" {
-                found = true;
-            }
-        }
-    }
-
-    if found {
-        paths.push(current_path.join(""));
+        _ => {}
     }
 }
 
-fn main() -> serde_json::Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     let data = match args.json {
@@ -77,13 +58,16 @@ fn main() -> serde_json::Result<()> {
         }
     };
 
-    let json: Value = serde_json::from_str(&data)?;
-    let mut paths = Vec::new();
+    let json: Value = serde_json::from_str(&data).context("Failed to parse input JSON")?;
+    let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
 
-    find_paths(&json, &args.value, vec![], &mut paths);
+    let mut paths = Vec::new();
+    let mut current_path = Vec::new();
+
+    find_paths(&json, &target_value, &mut current_path, &mut paths);
 
     for path in paths {
-        println!("{path}");
+        println!("{}", path);
     }
 
     Ok(())

@@ -27,7 +27,7 @@ For example, given the following JSON:
 }]}
 ```
 
-    % json-key-from-value yes < json
+    % json-key-from-value '"yes'" < json
     ["data"][0]["foo"][0]["bar"][0]["name"]
 
     % json-key-from-value 2 < json
