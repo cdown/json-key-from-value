@@ -21,7 +21,22 @@ struct Args {
 
 struct StackItem<'json> {
     value: &'json Value,
-    path: Vec<String>,
+    path: Vec<JsonPath<'json>>,
+}
+
+#[derive(Clone)]
+enum JsonPath<'json> {
+    Key(&'json String),
+    Index(usize),
+}
+
+impl JsonPath<'_> {
+    fn format(&self) -> String {
+        match self {
+            JsonPath::Key(key) => format!("[{}]", serde_json::to_string(key).expect("invalid key")),
+            JsonPath::Index(index) => format!("[{index}]"),
+        }
+    }
 }
 
 fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Result<Vec<String>> {
@@ -33,7 +48,7 @@ fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Resu
 
     while let Some(StackItem { value, path }) = stack.pop() {
         if value == target {
-            paths.push(path.join(""));
+            paths.push(path.iter().map(JsonPath::format).collect());
             if max_results.map_or(false, |max| paths.len() == max) {
                 break;
             }
@@ -44,8 +59,7 @@ fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Resu
             Value::Object(map) => {
                 for (k, value) in map {
                     let mut new_path = path.clone();
-                    let escaped_key = serde_json::to_string(k)?;
-                    new_path.push(format!("[{escaped_key}]"));
+                    new_path.push(JsonPath::Key(k));
                     stack.push(StackItem {
                         value,
                         path: new_path,
@@ -57,7 +71,7 @@ fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Resu
                 // with --max-results is weird.
                 for (i, value) in arr.iter().enumerate().rev() {
                     let mut new_path = path.clone();
-                    new_path.push(format!("[{i}]"));
+                    new_path.push(JsonPath::Index(i));
                     stack.push(StackItem {
                         value,
                         path: new_path,
