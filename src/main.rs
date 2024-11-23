@@ -46,7 +46,9 @@ fn find_paths(value: &Value, target: &Value) -> Result<Vec<String>> {
                 }
             }
             Value::Array(arr) => {
-                for (i, value) in arr.iter().enumerate() {
+                // We pop from the back, so put final indices on first, otherwise the interaction
+                // with --max-results is weird.
+                for (i, value) in arr.iter().enumerate().rev() {
                     let mut new_path = path.clone();
                     new_path.push(format!("[{i}]"));
                     stack.push(StackItem {
