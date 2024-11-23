@@ -76,7 +76,7 @@ fn main() -> Result<()> {
         }
     };
 
-    let json: Value = serde_json::from_str(&data).context("Failed to parse input JSON")?;
+    let json = serde_json::from_str(&data).context("Failed to parse input JSON")?;
     let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
 
     let paths = find_paths(&json, &target_value)?;
