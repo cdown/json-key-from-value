@@ -1,4 +1,5 @@
 use assert_cmd::Command;
+use predicates::prelude::*;
 use std::fs::File;
 use std::io::Write;
 use tempfile::TempDir;
@@ -342,4 +343,20 @@ fn test_malformed_command_line_json_argument() {
         .assert()
         .failure()
         .stderr(predicates::str::contains("Unable to read file"));
+}
+
+#[test]
+fn test_max_results() {
+    let mut cmd = Command::cargo_bin("json-key-from-value").unwrap();
+    let json_input = r#"[1, 1, 1, 2, 4]"#;
+    let value_to_find = "1";
+    cmd.write_stdin(json_input)
+        .arg(value_to_find)
+        .arg("--max-results")
+        .arg("2")
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("[0]\n"))
+        .stdout(predicates::str::contains("[1]\n"))
+        .stdout(predicates::str::contains("[2]\n").not());
 }

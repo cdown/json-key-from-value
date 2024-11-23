@@ -11,6 +11,10 @@ struct Args {
     #[clap(short, long)]
     json: Option<String>,
 
+    /// Stop searching after this many paths are found.
+    #[clap(short, long)]
+    max_results: Option<usize>,
+
     /// The value to find.
     value: String,
 }
@@ -20,7 +24,7 @@ struct StackItem<'json> {
     path: Vec<String>,
 }
 
-fn find_paths(value: &Value, target: &Value) -> Result<Vec<String>> {
+fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Result<Vec<String>> {
     let mut stack = vec![StackItem {
         value,
         path: Vec::new(),
@@ -30,6 +34,9 @@ fn find_paths(value: &Value, target: &Value) -> Result<Vec<String>> {
     while let Some(StackItem { value, path }) = stack.pop() {
         if value == target {
             paths.push(path.join(""));
+            if max_results.map_or(false, |max| paths.len() == max) {
+                break;
+            }
             continue;
         }
 
@@ -81,7 +88,7 @@ fn main() -> Result<()> {
     let json = serde_json::from_str(&data).context("Failed to parse input JSON")?;
     let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
 
-    let paths = find_paths(&json, &target_value)?;
+    let paths = find_paths(&json, &target_value, args.max_results)?;
 
     for path in paths {
         println!("{}", path);
