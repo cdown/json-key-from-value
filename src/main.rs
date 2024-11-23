@@ -30,6 +30,7 @@ fn find_paths(value: &Value, target: &Value) -> Result<Vec<String>> {
     while let Some(StackItem { value, path }) = stack.pop() {
         if value == target {
             paths.push(path.join(""));
+            continue;
         }
 
         match value {
