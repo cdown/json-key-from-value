@@ -21,7 +21,8 @@ struct Args {
 
 struct StackItem<'json> {
     value: &'json Value,
-    path: Vec<JsonPath<'json>>,
+    depth: usize,
+    path_element: Option<JsonPath<'json>>,
 }
 
 #[derive(Clone)]
@@ -42,11 +43,23 @@ impl JsonPath<'_> {
 fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Result<Vec<String>> {
     let mut stack = vec![StackItem {
         value,
-        path: Vec::new(),
+        depth: 0,
+        path_element: None,
     }];
     let mut paths = Vec::new();
+    let mut path = Vec::new();
 
-    while let Some(StackItem { value, path }) = stack.pop() {
+    while let Some(StackItem {
+        value,
+        depth,
+        path_element,
+    }) = stack.pop()
+    {
+        path.truncate(depth);
+        if let Some(elem) = path_element {
+            path.push(elem);
+        }
+
         if value == target {
             paths.push(path.iter().map(JsonPath::format).collect());
             if max_results.map_or(false, |max| paths.len() == max) {
@@ -58,11 +71,10 @@ fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Resu
         match value {
             Value::Object(map) => {
                 for (k, value) in map {
-                    let mut new_path = path.clone();
-                    new_path.push(JsonPath::Key(k));
                     stack.push(StackItem {
                         value,
-                        path: new_path,
+                        depth: path.len(),
+                        path_element: Some(JsonPath::Key(k)),
                     });
                 }
             }
@@ -70,11 +82,10 @@ fn find_paths(value: &Value, target: &Value, max_results: Option<usize>) -> Resu
                 // We pop from the back, so put final indices on first, otherwise the interaction
                 // with --max-results is weird.
                 for (i, value) in arr.iter().enumerate().rev() {
-                    let mut new_path = path.clone();
-                    new_path.push(JsonPath::Index(i));
                     stack.push(StackItem {
                         value,
-                        path: new_path,
+                        depth: path.len(),
+                        path_element: Some(JsonPath::Index(i)),
                     });
                 }
             }
