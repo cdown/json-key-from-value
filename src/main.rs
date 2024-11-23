@@ -15,33 +15,49 @@ struct Args {
     value: String,
 }
 
-fn find_paths(
-    value: &Value,
-    target: &Value,
-    current_path: &mut Vec<String>,
-    paths: &mut Vec<String>,
-) {
-    if value == target {
-        paths.push(current_path.join(""));
+struct StackItem<'json> {
+    value: &'json Value,
+    path: Vec<String>,
+}
+
+fn find_paths(value: &Value, target: &Value) -> Vec<String> {
+    let mut stack = vec![StackItem {
+        value,
+        path: Vec::new(),
+    }];
+    let mut paths = Vec::new();
+
+    while let Some(StackItem { value, path }) = stack.pop() {
+        if value == target {
+            paths.push(path.join(""));
+        }
+
+        match value {
+            Value::Object(map) => {
+                for (k, value) in map {
+                    let mut new_path = path.clone();
+                    new_path.push(format!("[\"{k}\"]"));
+                    stack.push(StackItem {
+                        value,
+                        path: new_path,
+                    });
+                }
+            }
+            Value::Array(arr) => {
+                for (i, value) in arr.iter().enumerate() {
+                    let mut new_path = path.clone();
+                    new_path.push(format!("[{i}]"));
+                    stack.push(StackItem {
+                        value,
+                        path: new_path,
+                    });
+                }
+            }
+            _ => {}
+        }
     }
 
-    match value {
-        Value::Object(map) => {
-            for (k, v) in map {
-                current_path.push(format!("[\"{k}\"]"));
-                find_paths(v, target, current_path, paths);
-                current_path.pop();
-            }
-        }
-        Value::Array(arr) => {
-            for (i, v) in arr.iter().enumerate() {
-                current_path.push(format!("[{i}]"));
-                find_paths(v, target, current_path, paths);
-                current_path.pop();
-            }
-        }
-        _ => {}
-    }
+    paths
 }
 
 fn main() -> Result<()> {
@@ -61,10 +77,7 @@ fn main() -> Result<()> {
     let json: Value = serde_json::from_str(&data).context("Failed to parse input JSON")?;
     let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
 
-    let mut paths = Vec::new();
-    let mut current_path = Vec::new();
-
-    find_paths(&json, &target_value, &mut current_path, &mut paths);
+    let paths = find_paths(&json, &target_value);
 
     for path in paths {
         println!("{}", path);
