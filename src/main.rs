@@ -20,7 +20,7 @@ struct StackItem<'json> {
     path: Vec<String>,
 }
 
-fn find_paths(value: &Value, target: &Value) -> Vec<String> {
+fn find_paths(value: &Value, target: &Value) -> Result<Vec<String>> {
     let mut stack = vec![StackItem {
         value,
         path: Vec::new(),
@@ -36,7 +36,8 @@ fn find_paths(value: &Value, target: &Value) -> Vec<String> {
             Value::Object(map) => {
                 for (k, value) in map {
                     let mut new_path = path.clone();
-                    new_path.push(format!("[\"{k}\"]"));
+                    let escaped_key = serde_json::to_string(k)?;
+                    new_path.push(format!("[{escaped_key}]"));
                     stack.push(StackItem {
                         value,
                         path: new_path,
@@ -57,7 +58,7 @@ fn find_paths(value: &Value, target: &Value) -> Vec<String> {
         }
     }
 
-    paths
+    Ok(paths)
 }
 
 fn main() -> Result<()> {
@@ -77,7 +78,7 @@ fn main() -> Result<()> {
     let json: Value = serde_json::from_str(&data).context("Failed to parse input JSON")?;
     let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
 
-    let paths = find_paths(&json, &target_value);
+    let paths = find_paths(&json, &target_value)?;
 
     for path in paths {
         println!("{}", path);
