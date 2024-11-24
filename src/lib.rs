@@ -58,7 +58,7 @@ pub fn find_paths(
             Value::Object(map) => {
                 stack.extend(map.iter().map(|(k, v)| StackItem {
                     value: v,
-                    depth: path.len(),
+                    depth: depth + 1,
                     path_element: Some(JsonPath::Key(k)),
                 }));
             }
@@ -67,7 +67,7 @@ pub fn find_paths(
                 // with --max-results is weird.
                 stack.extend(arr.iter().enumerate().rev().map(|(i, v)| StackItem {
                     value: v,
-                    depth: path.len(),
+                    depth: depth + 1,
                     path_element: Some(JsonPath::Index(i)),
                 }));
             }
