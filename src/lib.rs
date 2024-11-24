@@ -9,7 +9,7 @@ struct StackItem<'json> {
 
 #[derive(Clone)]
 enum JsonPath<'json> {
-    Key(&'json String),
+    Key(&'json str),
     Index(usize),
 }
 
