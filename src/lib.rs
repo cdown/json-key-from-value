@@ -56,24 +56,20 @@ pub fn find_paths(
 
         match value {
             Value::Object(map) => {
-                for (k, value) in map {
-                    stack.push(StackItem {
-                        value,
-                        depth: path.len(),
-                        path_element: Some(JsonPath::Key(k)),
-                    });
-                }
+                stack.extend(map.iter().map(|(k, v)| StackItem {
+                    value: v,
+                    depth: path.len(),
+                    path_element: Some(JsonPath::Key(k)),
+                }));
             }
             Value::Array(arr) => {
                 // We pop from the back, so put final indices on first, otherwise the interaction
                 // with --max-results is weird.
-                for (i, value) in arr.iter().enumerate().rev() {
-                    stack.push(StackItem {
-                        value,
-                        depth: path.len(),
-                        path_element: Some(JsonPath::Index(i)),
-                    });
-                }
+                stack.extend(arr.iter().enumerate().rev().map(|(i, v)| StackItem {
+                    value: v,
+                    depth: path.len(),
+                    path_element: Some(JsonPath::Index(i)),
+                }));
             }
             _ => {}
         }
