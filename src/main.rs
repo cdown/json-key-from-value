@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use json_key_from_value::find_paths;
+use simd_json::to_borrowed_value;
 use std::fs;
 use std::io::{self, Read};
 
@@ -32,9 +33,12 @@ fn main() -> Result<()> {
             buffer
         }
     };
+    let mut data_bytes = data.into_bytes();
+    let mut value_bytes = args.value.into_bytes();
 
-    let json = serde_json::from_str(&data).context("Failed to parse input JSON")?;
-    let target_value = serde_json::from_str(&args.value).context("Failed to parse search JSON")?;
+    let json = to_borrowed_value(&mut data_bytes).context("Failed to parse input JSON")?;
+    let target_value =
+        to_borrowed_value(&mut value_bytes).context("Failed to parse search JSON")?;
 
     let paths = find_paths(&json, &target_value, args.max_results)?;
 

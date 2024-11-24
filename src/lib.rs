@@ -1,8 +1,9 @@
 use anyhow::Result;
-use serde_json::Value;
+use simd_json::borrowed::Value;
+use std::borrow::Cow;
 
 struct StackItem<'json> {
-    value: &'json Value,
+    value: &'json Value<'json>,
     depth: usize,
     path_element: Option<JsonPath<'json>>,
 }
@@ -16,7 +17,10 @@ enum JsonPath<'json> {
 impl JsonPath<'_> {
     fn format(&self) -> String {
         match self {
-            JsonPath::Key(key) => format!("[{}]", serde_json::to_string(key).expect("invalid key")),
+            JsonPath::Key(key) => format!(
+                "[{}]",
+                simd_json::to_string(&Value::String(Cow::Borrowed(key))).expect("invalid key")
+            ),
             JsonPath::Index(index) => format!("[{index}]"),
         }
     }
