@@ -23,6 +23,11 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    // Reading from stdin is unbounded in time, validate the bounded part first
+    let mut value_bytes = args.value.into_bytes();
+    let target_value =
+        to_borrowed_value(&mut value_bytes).context("Failed to parse search JSON")?;
+
     let data = match args.json {
         Some(file_path) => fs::read_to_string(file_path).expect("Unable to read file"),
         None => {
@@ -34,11 +39,7 @@ fn main() -> Result<()> {
         }
     };
     let mut data_bytes = data.into_bytes();
-    let mut value_bytes = args.value.into_bytes();
-
     let json = to_borrowed_value(&mut data_bytes).context("Failed to parse input JSON")?;
-    let target_value =
-        to_borrowed_value(&mut value_bytes).context("Failed to parse search JSON")?;
 
     let paths = find_paths(&json, &target_value, args.max_results)?;
 
