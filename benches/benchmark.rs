@@ -1,4 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use json_key_from_value::SearchType;
 use simd_json::to_borrowed_value;
 use std::collections::HashMap;
 
@@ -24,6 +25,7 @@ fn benchmark_small_json(c: &mut Criterion) {
                 black_box(&small_json),
                 black_box(&search_value),
                 black_box(Some(10)),
+                SearchType::Value,
             );
         });
     });
@@ -52,6 +54,7 @@ fn benchmark_large_json(c: &mut Criterion) {
                 black_box(&large_json),
                 black_box(&search_value),
                 black_box(Some(10)),
+                SearchType::Value,
             );
         });
     });

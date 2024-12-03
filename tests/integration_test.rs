@@ -17,6 +17,32 @@ fn test_find_string_value_in_object() {
 }
 
 #[test]
+fn test_find_key() {
+    let mut cmd = Command::cargo_bin("json-key-from-value").unwrap();
+    let json_input = r#"{"type": {"type": "hi"}}"#;
+    let key_to_find = "\"type\"";
+    cmd.write_stdin(json_input)
+        .arg("--key")
+        .arg(key_to_find)
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("[\"type\"]\n"))
+        .stdout(predicates::str::contains("[\"type\"][\"type\"]\n"));
+}
+
+#[test]
+fn test_find_key_invalid_search() {
+    let mut cmd = Command::cargo_bin("json-key-from-value").unwrap();
+    let json_input = r#""#;
+    let key_to_find = "1";
+    cmd.write_stdin(json_input)
+        .arg("--key")
+        .arg(key_to_find)
+        .assert()
+        .failure();
+}
+
+#[test]
 fn test_find_number_value_in_array() {
     let mut cmd = Command::cargo_bin("json-key-from-value").unwrap();
     let json_input = r#"[1, 2, 3, 4]"#;

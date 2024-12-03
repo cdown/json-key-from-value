@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use json_key_from_value::find_paths;
+use json_key_from_value::{find_paths, SearchType};
 use simd_json::to_borrowed_value;
 use std::fs;
 use std::io::{self, Read};
@@ -15,6 +15,10 @@ struct Args {
     /// Stop searching after this many paths are found.
     #[clap(short, long)]
     max_results: Option<usize>,
+
+    /// Search for a key instead of a value.
+    #[clap(short, long)]
+    key: bool,
 
     /// The value to find.
     value: String,
@@ -41,7 +45,13 @@ fn main() -> Result<()> {
     let mut data_bytes = data.into_bytes();
     let json = to_borrowed_value(&mut data_bytes).context("Failed to parse input JSON")?;
 
-    let paths = find_paths(&json, &target_value, args.max_results)?;
+    let search_type = if args.key {
+        SearchType::Key
+    } else {
+        SearchType::Value
+    };
+
+    let paths = find_paths(&json, &target_value, args.max_results, search_type)?;
 
     for path in paths {
         println!("{}", path);
